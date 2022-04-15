@@ -11,7 +11,7 @@ public class BallManager : MonoBehaviour
 
     public Ball ball;
 
-    public TMP_InputField m_InputField, m_spinInput;
+    public TMP_InputField m_BallingSpeed, m_spinInput;
 
     private bool canBowl;
 
@@ -33,22 +33,53 @@ public class BallManager : MonoBehaviour
 
     private void Start()
     {
-        m_InputField.text = "3";
+        m_BallingSpeed.text = "70";
         m_spinInput.text = "2";
 
         canBowl = true;
     }
+
+    public void OnValueChanged()
+    {
+        if (string.IsNullOrEmpty(m_BallingSpeed.text))
+        {
+            m_BallingSpeed.text = "0";
+        }
+
+        float speed = float.Parse(m_BallingSpeed.text);
+
+        if (speed > 160)
+        {
+            speed = 160;
+        }
+        else if (speed < 70)
+        {
+            speed = 70;
+        }
+
+        Debug.Log(GetInRange(speed));
+        m_BallingSpeed.text = speed.ToString();
+    }
     public void OnBowl()
     {
+        canBowl = false;
+
         Ball temp = Instantiate(ball);
 
         temp.transform.position = m_BallRelease.position;
 
-        temp.ShootBall((m_Pointer.transform.position), float.Parse(m_spinInput.text), float.Parse(m_InputField.text));
+        temp.ShootBall((m_Pointer.transform.position), float.Parse(m_spinInput.text), GetInRange(float.Parse(m_BallingSpeed.text)));
 
         m_Pointer.gameObject.SetActive(false);
 
-        canBowl = false;
+    }
+
+    private float GetInRange(float speed)
+    {
+        float newRange = 3.5f - 2.25f;
+        float oldRange = 160 - 70;
+        float newValue = (((speed - 70) * newRange) / oldRange) + 2.25f;
+        return newValue;
     }
 
     public void OnBallOver(Ball b)

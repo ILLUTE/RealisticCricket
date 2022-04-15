@@ -26,7 +26,14 @@ public class GameManager : MonoBehaviour
     public static event Action OnBallExitedHit;
     public static event Action<Vector3,float> OnBatSwing;
     public static event Action<Ball> OnBallDead;
+    public static event Action<bool> OnPlayLofted;
 
+    private bool IsLofted;
+
+    private void Start()
+    {
+        Physics.gravity = new Vector3(0, -5, 0);
+    }
     public void StartBowling()
     {
         OnPlayBall?.Invoke();
@@ -56,5 +63,11 @@ public class GameManager : MonoBehaviour
     {
         OnBallDead?.Invoke(b);
         Destroy(b.gameObject);
+    }
+    public bool PlayLoftedShot()
+    {
+        IsLofted = !IsLofted;
+        OnPlayLofted?.Invoke(IsLofted);
+        return IsLofted;
     }
 }

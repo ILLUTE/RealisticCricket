@@ -18,6 +18,8 @@ public class Ball : MonoBehaviour
     private bool _isReleased, _isCollided, IsDead = false;
     private float toReach,distanceToCover;
 
+    private float totalBounces = 0;
+
     public void ShootBall(Vector3 Pos, float spinAngle, float speed,float _pitchBounceCoefficient = 0.65f)
     {
         // Set Values
@@ -61,17 +63,34 @@ public class Ball : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.collider.CompareTag("OnBatBox"))
+        if (collision.collider.CompareTag("OnBatBox"))
         {
             return;
         }
-        _isReleased = false;
-        _isCollided = true;
-        m_Rigidbody.useGravity = true;
-        moveDirection = Vector3.Reflect(transform.forward, collision.contacts[0].normal);
-        m_Transform.forward = moveDirection;
-        m_Rigidbody.velocity = new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed;
-        ballSpeed = Mathf.Clamp(ballSpeed - 0.2f, 0, maxSpeed);
+
+        if (collision.collider.CompareTag("Boundary"))
+        {
+            if (totalBounces == 0)
+            {
+                Debug.Log("Player Hit a 6");
+            }
+            else
+            {
+                Debug.Log("Player Hit a 4");
+            }
+            m_Rigidbody.velocity = Vector3.zero;
+        }
+        else
+        {
+            _isReleased = false;
+            _isCollided = true;
+            m_Rigidbody.useGravity = true;
+            moveDirection = Vector3.Reflect(transform.forward, collision.contacts[0].normal);
+            m_Transform.forward = moveDirection;
+            m_Rigidbody.velocity = new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed;
+
+            totalBounces++;
+        }
     }
     private void OnCollisionStay(Collision collision)
     {
@@ -95,12 +114,12 @@ public class Ball : MonoBehaviour
 
     private void OnBatSwing(Vector3 direction,float force)
     {
-        _isCollided = false;
-        m_Rigidbody.velocity = Vector3.zero;
         m_Transform.forward = direction;
         m_Rigidbody.velocity = direction * force;
         _isCollided = true;
+        m_Rigidbody.useGravity = true;
 
+        totalBounces = -1;
         BallExitTrigger();
     }
 

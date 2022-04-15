@@ -6,17 +6,15 @@ using System;
 
 public class BatDirection : MonoBehaviour
 {
+    public TMP_InputField m_BatSpeed;
+
+    public Transform batHit;
+
     private Vector2 startPos;
 
     public Vector3 currentDirection;
 
-    public TMP_InputField m_BatSpeed;
-
-    private bool canSwing;
-
-    public Transform batHit;
-
-    public bool IsLoft;
+    private bool canSwing, IsLoft;
 
     private void Awake()
     {
@@ -24,11 +22,13 @@ public class BatDirection : MonoBehaviour
         GameManager.OnBallReleased += OnBallReleased;
         GameManager.OnBallEnteredHit += OnEnterHit;
         GameManager.OnBallExitedHit += OnExitHit;
+        GameManager.OnPlayLofted += Loft;
     }
 
     private void OnExitHit()
     {
         CanSwing(false);
+        batHit.gameObject.SetActive(false);
     }
 
     private void OnEnterHit()
@@ -54,9 +54,9 @@ public class BatDirection : MonoBehaviour
         batHit.gameObject.SetActive(false);
     }
 
-    public void Loft()
+    public void Loft(bool isLoft)
     {
-        IsLoft = !IsLoft;
+        IsLoft = isLoft;
     }
 
     private void Update()
@@ -78,7 +78,7 @@ public class BatDirection : MonoBehaviour
         {
             Vector2 dir = endPos - startPos;
             dir = dir.normalized;
-            currentDirection = new Vector3(dir.x, IsLoft ? .4f : 0, dir.y);
+            currentDirection = new Vector3(dir.x, IsLoft ? .75f : -.5f, dir.y);
             GameManager.Instance.BatSwung(currentDirection, float.Parse(m_BatSpeed.text));
         }
     }
