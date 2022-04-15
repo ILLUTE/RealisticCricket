@@ -64,7 +64,7 @@ public class BallManager : MonoBehaviour
     {
         canBowl = false;
 
-        Ball temp = Instantiate(ball);
+        Ball temp = Instantiate(ball); // Can just reuse the ball as well, Todo if I get time.
 
         temp.transform.position = m_BallRelease.position;
 
