@@ -90,17 +90,26 @@ public class Ball : MonoBehaviour
             m_Rigidbody.velocity = new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed;
 
             totalBounces++;
+            Debug.Log(collision.gameObject.name);
         }
     }
+
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.collider.CompareTag("OnBatBox"))
+        Vector3 dir;
+
+        if (ballSpeed > 0)
         {
-            Debug.Log("Why");
-            return;
+             dir = m_Rigidbody.velocity / ballSpeed;
         }
-        ballSpeed = Mathf.Clamp(ballSpeed - 0.2f, 0, maxSpeed);
-        m_Rigidbody.velocity = m_Rigidbody.velocity.normalized * ballSpeed;
+        else
+        {
+            dir = m_Transform.forward;
+        }
+
+        ballSpeed = Mathf.Clamp(ballSpeed - (maxSpeed / 6), 0, maxSpeed);
+
+        m_Rigidbody.velocity = dir * ballSpeed;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -118,7 +127,6 @@ public class Ball : MonoBehaviour
         m_Rigidbody.velocity = direction * force;
         _isCollided = true;
         m_Rigidbody.useGravity = true;
-
         totalBounces = -1;
         BallExitTrigger();
     }
