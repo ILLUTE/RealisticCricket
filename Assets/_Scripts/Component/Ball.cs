@@ -15,7 +15,7 @@ public class Ball : MonoBehaviour
     private Vector3 moveDirection;
     private Vector3 startPos, endPos, lastPos, lastDir;
     private float ballSpeed = 3.5f, pitchBounce;
-    private bool _isReleased, _isCollided, IsDead = false;
+    private bool _isReleased, _isCollided, _ballDone, IsDead = false;
     private float toReach,distanceToCover;
 
     private float totalBounces = 0;
@@ -89,7 +89,7 @@ public class Ball : MonoBehaviour
             _isReleased = false;
             m_Rigidbody.useGravity = true;
             m_Rigidbody.angularVelocity = Vector3.zero;
-            moveDirection = Vector3.Reflect(lastDir.normalized, collision.GetContact(0).normal);
+            moveDirection = Vector3.Reflect(_ballDone ? lastDir.normalized : m_Transform.forward, collision.GetContact(0).normal);
             moveDirection.Normalize();
             m_Rigidbody.AddForce(new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed, ForceMode.Impulse);
 
@@ -131,6 +131,7 @@ public class Ball : MonoBehaviour
 
     private void BallExitTrigger()
     {
+        _ballDone = true;
         _isCollided = true;
         GameManager.Instance.BallExitBastmanTriggerZone();
         GameManager.OnBatSwing -= OnBatSwing;
