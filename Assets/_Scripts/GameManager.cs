@@ -28,6 +28,8 @@ public class GameManager : MonoBehaviour
     public static event Action<Ball> OnBallDead;
     public static event Action<bool> OnPlayLofted;
 
+    public static event Action<int> UpdateScore;
+
     private bool IsLofted;
 
     private void Start()
@@ -69,5 +71,10 @@ public class GameManager : MonoBehaviour
         IsLofted = !IsLofted;
         OnPlayLofted?.Invoke(IsLofted);
         return IsLofted;
+    }
+
+    public void ScoreUpdate(int _score)
+    {
+        UpdateScore?.Invoke(_score);
     }
 }

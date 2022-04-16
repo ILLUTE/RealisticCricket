@@ -74,14 +74,17 @@ public class Ball : MonoBehaviour
 
         if (collision.collider.CompareTag("Boundary"))
         {
+            int score;
+
             if (totalBounces == 0)
             {
-                Debug.Log("Player Hit a 6");
+                score = 6;
             }
             else
             {
-                Debug.Log("Player Hit a 4");
+                score = 4;
             }
+            GameManager.Instance.ScoreUpdate(score);
             m_Rigidbody.velocity = Vector3.zero;
         }
         else
@@ -113,6 +116,7 @@ public class Ball : MonoBehaviour
     {
         ballSpeed = force;
         _isCollided = false;
+        _isReleased = false;
         m_Rigidbody.velocity = Vector3.zero;
         m_Rigidbody.AddForce(direction * force, ForceMode.Impulse);
         m_Rigidbody.useGravity = true;
