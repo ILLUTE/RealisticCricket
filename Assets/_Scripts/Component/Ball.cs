@@ -13,8 +13,8 @@ public class Ball : MonoBehaviour
 
     [Header("Variables")]
     private Vector3 moveDirection;
-    private Vector3 startPos,endPos;
-    private float ballSpeed, maxSpeed = 3.5f, pitchBounce;
+    private Vector3 startPos, endPos, lastPos, lastDir;
+    private float ballSpeed = 3.5f, pitchBounce;
     private bool _isReleased, _isCollided, IsDead = false;
     private float toReach,distanceToCover;
 
@@ -24,7 +24,7 @@ public class Ball : MonoBehaviour
     {
         // Set Values
         pitchBounce = _pitchBounceCoefficient;
-        ballSpeed = maxSpeed = speed;
+        ballSpeed = speed;
         endPos = Pos;
         toReach = Time.time;
         startPos = m_Transform.position;
@@ -59,6 +59,10 @@ public class Ball : MonoBehaviour
 
             m_Transform.position = Vector3.Lerp(startPos, endPos, frac);
         }
+
+        lastDir = m_Transform.position - lastPos;
+        lastPos = m_Transform.position;
+        Debug.DrawRay(m_Transform.position, m_Transform.forward, Color.black);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -83,33 +87,17 @@ public class Ball : MonoBehaviour
         else
         {
             _isReleased = false;
-            _isCollided = true;
             m_Rigidbody.useGravity = true;
-            moveDirection = Vector3.Reflect(transform.forward, collision.contacts[0].normal);
-            m_Transform.forward = moveDirection;
-            m_Rigidbody.velocity = new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed;
+            m_Rigidbody.angularVelocity = Vector3.zero;
+            moveDirection = Vector3.Reflect(lastDir.normalized, collision.GetContact(0).normal);
+            moveDirection.Normalize();
+            m_Rigidbody.AddForce(new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed, ForceMode.Impulse);
 
             totalBounces++;
-            Debug.Log(collision.gameObject.name);
+            pitchBounce -= totalBounces * .15f;
+            m_Rigidbody.mass = totalBounces * 0.5f;
+            ballSpeed -= totalBounces * .1f;
         }
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        Vector3 dir;
-
-        if (ballSpeed > 0)
-        {
-             dir = m_Rigidbody.velocity / ballSpeed;
-        }
-        else
-        {
-            dir = m_Transform.forward;
-        }
-
-        ballSpeed = Mathf.Clamp(ballSpeed - (maxSpeed / 6), 0, maxSpeed);
-
-        m_Rigidbody.velocity = dir * ballSpeed;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -121,14 +109,16 @@ public class Ball : MonoBehaviour
         }
     }
 
-    private void OnBatSwing(Vector3 direction,float force)
+    private void OnBatSwing(Vector3 direction, float force)
     {
-        m_Transform.forward = direction;
-        m_Rigidbody.velocity = direction * force;
-        _isCollided = true;
+        ballSpeed = force;
+        _isCollided = false;
+        m_Rigidbody.velocity = Vector3.zero;
+        m_Rigidbody.AddForce(direction * force, ForceMode.Impulse);
         m_Rigidbody.useGravity = true;
-        totalBounces = -1;
-        BallExitTrigger();
+        totalBounces = 0;
+        Invoke("BallExitTrigger", 0.1f);
+        
     }
 
     private void OnTriggerExit(Collider other)
@@ -141,6 +131,7 @@ public class Ball : MonoBehaviour
 
     private void BallExitTrigger()
     {
+        _isCollided = true;
         GameManager.Instance.BallExitBastmanTriggerZone();
         GameManager.OnBatSwing -= OnBatSwing;
     }

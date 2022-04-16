@@ -76,9 +76,9 @@ public class BallManager : MonoBehaviour
 
     private float GetInRange(float speed)
     {
-        float newRange = 3.5f - 2.25f;
+        float newRange = 1.6f - 1.25f;
         float oldRange = 160 - 70;
-        float newValue = (((speed - 70) * newRange) / oldRange) + 2.25f;
+        float newValue = (((speed - 70) * newRange) / oldRange) + 1.25f;
         return newValue;
     }
 
