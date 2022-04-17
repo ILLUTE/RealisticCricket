@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     public static event Action<bool> OnPlayLofted;
 
     public static event Action<int> UpdateScore;
+    public static event Action<bool> CameraSwitch;
 
     private bool IsLofted;
 
@@ -76,5 +77,10 @@ public class GameManager : MonoBehaviour
     public void ScoreUpdate(int _score)
     {
         UpdateScore?.Invoke(_score);
+    }
+
+    public void SwitchCamera(bool IsFront)
+    {
+        CameraSwitch?.Invoke(IsFront);
     }
 }
