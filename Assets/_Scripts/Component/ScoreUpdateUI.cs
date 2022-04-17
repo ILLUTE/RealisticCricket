@@ -8,6 +8,7 @@ using TMPro;
 
 public class ScoreUpdateUI : MonoBehaviour
 {
+    [Header("References")]
     public RectTransform m_AnimAnchor;
     public TextMeshProUGUI m_ScoreText;
 

@@ -72,26 +72,6 @@ public class BatDirection : MonoBehaviour
         }
     }
 
-    public void OnValueChanged()
-    {
-        if (string.IsNullOrEmpty(m_BatSpeed.text))
-        {
-            m_BatSpeed.text = "0";
-        }
-
-        float speed = float.Parse(m_BatSpeed.text);
-
-        if (speed > 130) // Get these as variables? easy to configure.
-        {
-            speed = 130;
-        }
-        else if (speed < 70)
-        {
-            speed = 70;
-        }
-        m_BatSpeed.text = speed.ToString();
-    }
-
     private void Calculate(Vector2 endPos)
     {
         if (canSwing)
@@ -99,16 +79,11 @@ public class BatDirection : MonoBehaviour
             Vector2 dir = endPos - startPos;
             dir = dir.normalized;
             currentDirection = new Vector3(dir.x, IsLoft ? .75f : -.5f, dir.y);
-            GameManager.Instance.BatSwung(currentDirection, GetInRange(float.Parse(m_BatSpeed.text)));
-        }
-    }
 
-    private float GetInRange(float speed)
-    {
-        float newRange = 1.6f - 1f;
-        float oldRange = 130 - 70;
-        float newValue = (((speed - 70) * newRange) / oldRange) + 1f;
-        return newValue;
+            float.TryParse(m_BatSpeed.text, out float batSpeed);
+
+            GameManager.Instance.BatSwung(currentDirection, batSpeed.GetInRange(Constants.MIN_BATSPEED_V, Constants.MAX_BATSPEED_V, Constants.MIN_BATSPEED_R, Constants.MAX_BATSPEED_R));
+        }
     }
 
     public void CanSwing(bool _swing)

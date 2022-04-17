@@ -39,27 +39,6 @@ public class BallManager : MonoBehaviour
         canBowl = true;
     }
 
-    public void OnValueChanged()
-    {
-        if (string.IsNullOrEmpty(m_BallingSpeed.text))
-        {
-            m_BallingSpeed.text = "0";
-        }
-
-        float speed = float.Parse(m_BallingSpeed.text);
-
-        if (speed > 160)
-        {
-            speed = 160;
-        }
-        else if (speed < 70)
-        {
-            speed = 70;
-        }
-
-        Debug.Log(GetInRange(speed));
-        m_BallingSpeed.text = speed.ToString();
-    }
     public void OnBowl()
     {
         canBowl = false;
@@ -68,20 +47,16 @@ public class BallManager : MonoBehaviour
 
         temp.transform.position = m_BallRelease.position;
 
-        temp.ShootBall((m_Pointer.transform.position), float.Parse(m_spinInput.text), GetInRange(float.Parse(m_BallingSpeed.text)));
+        float.TryParse(m_spinInput.text, out float spinAngle);
+        float.TryParse(m_BallingSpeed.text, out float ballSpeed);
+
+        ballSpeed = ballSpeed.GetInRange(Constants.MIN_BALLSPEED_V, Constants.MAX_BALLSPEED_V, Constants.MIN_BALLSPEED_R, Constants.MAX_BALLSPEED_R);
+
+        temp.ShootBall(m_Pointer.transform.position, spinAngle, ballSpeed);
 
         m_Pointer.gameObject.SetActive(false);
 
     }
-
-    private float GetInRange(float speed)
-    {
-        float newRange = 1.6f - 1.25f;
-        float oldRange = 160 - 70;
-        float newValue = (((speed - 70) * newRange) / oldRange) + 1.25f;
-        return newValue;
-    }
-
     public void OnBallOver(Ball b)
     {
         m_Pointer.gameObject.SetActive(true);

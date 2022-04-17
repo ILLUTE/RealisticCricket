@@ -14,29 +14,31 @@ public class Ball : MonoBehaviour
     [Header("Variables")]
     private Vector3 moveDirection;
     private Vector3 startPos, endPos, lastPos, lastDir;
-    private float ballSpeed = 3.5f, pitchBounce;
+    private float ballSpeed = 3.5f, _bounceCoefficient;
     private bool _isReleased, _isCollided, _ballDone, IsDead = false;
     private float toReach,distanceToCover;
 
     private float totalBounces = 0;
 
-    public void ShootBall(Vector3 Pos, float spinAngle, float speed,float _pitchBounceCoefficient = 0.65f)
+    private Vector3 releasePoint;
+
+    public void ShootBall(Vector3 Pos, float spinAngle, float speed, float bounceCoefficient = 0.5f)
     {
+        releasePoint = m_Transform.position;
         // Set Values
-        pitchBounce = _pitchBounceCoefficient;
+        transform.rotation = Quaternion.Euler(0, spinAngle, 0);
+        startPos = m_Transform.position;
+        distanceToCover = Vector3.Distance(startPos, Pos); //  Can use (A - B).magnitude
+        _bounceCoefficient = bounceCoefficient;
+        toReach = Time.time;
         ballSpeed = speed;
         endPos = Pos;
-        toReach = Time.time;
-        startPos = m_Transform.position;
-        transform.rotation = Quaternion.Euler(0, spinAngle, 0);
-        distanceToCover = Vector3.Distance(startPos, Pos); //  Can use (A - B).magnitude
-        _isReleased = true; // Should Ball be in a state?
+        _isReleased = true; // Should Ball be in a state machine instead -- would be easier to maintain.?
 
         m_Rigidbody.useGravity = false;
         m_Rigidbody.velocity = Vector3.zero;
 
-        moveDirection = endPos - transform.position;
-
+        // Updating All Elements that the ball has released.
         GameManager.Instance.BallReleased(this);
 
     }
@@ -60,7 +62,7 @@ public class Ball : MonoBehaviour
             m_Transform.position = Vector3.Lerp(startPos, endPos, frac);
         }
 
-        lastDir = m_Transform.position - lastPos;
+        lastDir = m_Transform.position - lastPos; // Just keep telling me the direction of ball
         lastPos = m_Transform.position;
         Debug.DrawRay(m_Transform.position, m_Transform.forward, Color.black);
     }
@@ -93,14 +95,33 @@ public class Ball : MonoBehaviour
             m_Rigidbody.useGravity = true;
             m_Rigidbody.angularVelocity = Vector3.zero;
             moveDirection = Vector3.Reflect(_ballDone ? lastDir.normalized : m_Transform.forward, collision.GetContact(0).normal);
-            moveDirection.Normalize();
-            m_Rigidbody.AddForce(new Vector3(moveDirection.x, pitchBounce, moveDirection.z) * ballSpeed, ForceMode.Impulse);
 
+            moveDirection.Normalize();
+
+            // Just need to calculate if bouncing for first time.
+            float radians = Mathf.Tan(releasePoint.y /( m_Transform.position.z - releasePoint.z)); // --> basically lesser bounce in case pitched up to look a little better.
+            float bounce = _bounceCoefficient - (_ballDone ? 0 : (radians - 0.6f));
+
+            bounce = Mathf.Clamp(bounce, 0.4f, _bounceCoefficient); // Giving a minimum bounce..
+
+            m_Rigidbody.AddForce(new Vector3(moveDirection.x, bounce, moveDirection.z) * ballSpeed, ForceMode.Impulse);
             totalBounces++;
-            pitchBounce -= totalBounces * .15f;
-            m_Rigidbody.mass = totalBounces * 0.5f;
-            ballSpeed -= totalBounces * .1f;
+
+            if (_ballDone)
+            {
+                ReduceBallForce();
+            }
         }
+
+        Debug.Log(collision.gameObject.name);
+    }
+
+    private void ReduceBallForce()
+    {
+        // Reducing balls movement based on bounces
+        _bounceCoefficient -= totalBounces * .15f;
+        m_Rigidbody.mass = totalBounces * 0.5f;
+        ballSpeed -= totalBounces * .1f;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -121,8 +142,9 @@ public class Ball : MonoBehaviour
         m_Rigidbody.AddForce(direction * force, ForceMode.Impulse);
         m_Rigidbody.useGravity = true;
         totalBounces = 0;
-        Invoke("BallExitTrigger", 0.1f);
-        
+        _ballDone = true; // have to add this early on in case ball is a yorker, Game States might help with this, to reduce redundant code.
+        Invoke("BallExitTrigger", 0.1f);// Doing this so that ball isn't considered dead, because add force will happen next frame and velocity will be 0;[Currently Ball is killed when Vel = 0, need some other dead condition?]
+
     }
 
     private void OnTriggerExit(Collider other)
